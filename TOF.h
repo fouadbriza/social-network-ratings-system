@@ -11,14 +11,14 @@
 #include <stdio.h>
 
 // maximum block capacity (in number of records)
-#define MAXTAB 10
+#define MAXTAB 100
 
 // type of records (adapt to the using context)
 typedef struct record{
 int student1_id;
 int student2_id;
-int rating;
 int time;
+int rating;
 }t_rec;
 
 
@@ -26,7 +26,8 @@ int time;
 typedef struct blck {
   t_rec tab[MAXTAB]; // array of records inside a block
   char eff[MAXTAB]; // logical erase indicators ('*' erased / ' ' not erased)
-  int nb; // number of records inserted in the block
+  int nb;
+  int link; // number of records inserted in the block
         } t_block;
 
 
@@ -67,9 +68,21 @@ void setHeader( t_TOF *F  , long val );
 
 // header value
 int getHeader( t_TOF *F  );
-void Insert(t_TOF*f,t_rec e);
-void Rech(int cle, int *Trouv, int *i, int *j, t_TOF *F);
-
-
-
+void Insert(t_TOF *f, t_rec e,t_TOF *f1);
+void seqsearch3(t_TOF *f,t_rec e, int *found, int *i, int *j);
+void seqsearch3test(t_TOF *f, t_TOF *f1, int id1, int id2, int *i, int *j);
+void recherchee(t_TOF *f,t_TOF *f1,int cle1,int cle2, int *found, int *i, int *j,t_TOF **f2);
+void seqsearch3_binary(t_TOF *f, t_rec e,int *found, int *i, int *j);
+int cmp3(t_rec a, t_rec b);
+void reorganization(t_TOF **f2,t_TOF *f,t_TOF *f1 );
+void affichage(t_TOF *f, t_TOF *f1);
+void seqsearch(t_TOF *f, t_TOF *f1, int cle1, int cle2, int cle3,int *found, int *i, int *j, int *in_overflow);
+void Bulk_Loading(t_TOF *f);
+void N_insert(t_TOF *f, t_TOF *f1);
+int compare_by_three_fields(const void *a, const void *b);
+int count_lines(const char *filename);
+void print_friends(t_TOF *f, t_TOF *f1, int id1);
+void find_position_by_id1(t_TOF *f, int student1_id,int *found, int *block_index, int *rec_index);
+int cmp_id1(int key, t_rec r);
+int compareById1forsort(const void *a, const void *b);
 #endif // TOF_H_INCLUDED

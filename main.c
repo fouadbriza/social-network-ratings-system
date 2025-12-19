@@ -13,153 +13,15 @@
 
 // the TOF file
 t_TOF *f = NULL;
-
-t_block buf;  // the buffer in main memory
-
-
-int count_lines(const char *filename) {
-    FILE *fp = fopen(filename, "rb");   // <-- rb = read binary
-    if (fp == NULL) {
-        perror("Error opening file");
-        return -1;
-    }
-
-    long lines = 0;
-
-    int byte;
-
-    while ((byte = fgetc(fp)) != EOF) {
-        if (byte == 0x0A) {     // newline in binary
-            lines++;
-        }
-    }
-
-    fclose(fp);
-    return lines;
-
-}
-void seqsearch3(t_rec e, int *found, int *i, int *j)
-{
-    int n = getHeader(f); // nombre de blocs
-    *i = 1;                // commencer au premier bloc
-    *found = 0;
-    int stop = 0;
-    t_block buf;
-
-    while (*i <= n && !(*found) && !stop) {
-        TOF_readBlock(f, *i, &buf);
-        *j = 0;
-
-        // recherche interne dans le bloc
-        while (*j < buf.nb && !(*found) && !stop) {
-            if (buf.tab[*j].student1_id > e.student1_id ||
-               (buf.tab[*j].student1_id == e.student1_id && buf.tab[*j].student2_id > e.student2_id)) {
-                // position idéale pour insertion
-                stop = 1;
-            }
-            else if (buf.tab[*j].student1_id == e.student1_id &&
-                     buf.tab[*j].student2_id == e.student2_id) {
-                *found = 1; // trouvé le couple (cle1, cle2)
-            }
-            else {
-                (*j)++;
-            }
-        }
-
-        if (!(*found) && !stop) {
-            (*i)++;
-            *j = 0;
-        }
-    }
-
-    // si non trouvé et fin de fichier
-    if (!(*found) && stop == 0) {
-        *i = n;
-        TOF_readBlock(f, *i, &buf);
-        *j = buf.nb; // insertion à la fin du dernier bloc
-    }
-}
-
-/*
-int compare_by_student1(const void *a, const void *b) {
-    t_rec *rec1 = (t_rec*)a;
-    t_rec *rec2 = (t_rec*)b;
-    return rec1->student1_id - rec2->student1_id;  // ascending order
-}
-*/
-int compare_by_two_fields(const void *a, const void *b) {
-    t_rec *rec1 = (t_rec*)a;
-    t_rec *rec2 = (t_rec*)b;
-
-    // Primary key: student1_id
-    if(rec1->student1_id != rec2->student1_id)
-        return rec1->student1_id - rec2->student1_id;
-
-    // Secondary key: student2_id
-    return rec1->student2_id - rec2->student2_id;
-}
-void Bulk_Loading(t_TOF *f){
-int number=count_lines("DAKICHE.txt");
+t_TOF *f1 = NULL;
 
 
-    t_rec *p = (t_rec*)malloc((number/2) * sizeof(t_rec));
-    if(!p) {
-        printf("Memory allocation failed\n");
-
-    }
-FILE *fi;
-fi=fopen("DAKICHE.txt","r");
-
-if (fi == NULL) {
-    perror("Error opening file"); // prints system error message
-}
-    for(int i = 0; i < number/2; i++) {
-
-        fscanf(fi,"%d %d %d %d", &p[i].student1_id, &p[i].student2_id, &p[i].rating, &p[i].time);
-
-    }
-qsort(p, number/2, sizeof(t_rec), compare_by_two_fields);
+t_block buf,buf1;  // the buffer in main memory
 
 
-int i=1;
-int j=0;
-int k=0;
-while(k<(number/2)){
-if(j<=0.75*MAXTAB){
-buf.tab[j].student1_id=p[k].student1_id;
-buf.tab[j].student2_id=p[k].student2_id;
-buf.tab[j].rating=p[k].rating;
-buf.tab[j].time=p[k].time ;
 
 
-buf.eff[0]=0;
 
-j++;
-
-}
-else{
-buf.nb=j-1;
-TOF_writeBlock(f,i,&buf);
-i++;
-buf.tab[0].student1_id=p[k].student1_id;
-buf.tab[0].student2_id=p[k].student2_id;
-buf.tab[0].rating=p[k].rating;
-buf.tab[0].time=p[k].time;
-
-
-buf.eff[0]=0;
-
-j=1;
-}
-k++;
-}
-buf.nb=j-1;
-TOF_writeBlock(f,i,&buf);
-
-setHeader(f,i);
-
-
-}
 
 
 
@@ -167,22 +29,85 @@ int main(){
 
 
 TOF_open(&f,"fouad_file",'N');
+TOF_open(&f1,"LnOF",'N');
 if (f == NULL) {
     printf("Error: file not opened!\n");
 }
+
+
+
+
 Bulk_Loading(f);
-TOF_readBlock(f,1,&buf);
-int found,i,j;
-seqsearch3(buf.tab[5],&found,&i,&j);
-if(found=1){
-printf("%d,%d",i,j);
-}
-//printf("%d",getHeader(f));
+
+N_insert(f,f1);
+affichage(f,f1);
+int i, j, found, in_overflow;
+//TOF_readBlock(f,1,&buf);
+//printf("%d\n",getHeader(f));
+
+
+//seqsearch(f, f1, buf1.tab[1].student1_id, buf1.tab[1].student2_id, buf1.tab[1].time, &found, &i, &j, &in_overflow);
+
+
+
+//printf("%d",buf.tab[74].student1_id);
+//printf("%d",buf.nb);
+//int found,i,j;
+
+//seqsearch3(buf.tab[5],&found,&i,&j);
+//if(found=1){
+//printf("%d,%d",i,j);
+//TOF_readBlock(f,4,&buf);
+//t_rec x=buf.tab[4];
+//printf("%d",x.time);
 //printf("%d",buf.tab[4].time);
+//printf("%d",buf.nb);
+/*FILE *fi;
+t_rec e;
+int number=count_lines("DAKICHE.txt");
+fi=fopen("DAKICHE.txt","r");
+
+*/
+
+/*int i,j;
+i=0;
+j=0;
+t_TOF*f2;
+int trouve;
+TOF_readBlock(f,12,&buf);
+recherchee(f,f1,29,4,&trouve,&i,&j,&f2);
+printf("%d,%d\n",i,j);
+printf("%d",trouve);
+*/
+/*TOF_readBlock(f,20,&buf);
+int i,j,trouve;
+
+t_rec e;
+e.student1_id=6;
+e.student2_id=28;
+e.time=916959600;
+e.rating=0;
+TOF_readBlock(f,3,&buf);
+seqsearch3(f,e,&trouve,&i,&j);
+printf("%d,%d,%d\n",trouve,i,j);
+printf("%d,%d,%d,%d\n",buf.tab[57].student1_id,buf.tab[57].student2_id,buf.tab[57].time);
+printf("%d,%d,%d,%d\n",buf.tab[58].student1_id,buf.tab[58].student2_id,buf.tab[58].time);
+*/
+//void seqsearch3fouad(t_TOF *f, int id1, int id2, t_TOF *f1,int *found,int *i_block, int *j_rec,int *is_lnof)
+int is_lnof;
+
+//seqsearch3fouad(f, 28, 10, f1, &found, &i, &j, &is_lnof);
+
+print_friends(f,f1,2);
 
 
 
 
 TOF_close(f);
+TOF_close(f1);
+
+
+
 
 }
+
