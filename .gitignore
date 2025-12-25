@@ -2,3 +2,6 @@ bin/
 obj/
 *.depend
 *.layout
+reo
+save.txt
+fouad_file

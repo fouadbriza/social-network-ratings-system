@@ -13,8 +13,8 @@
 
 // the TOF file
 t_TOF *f = NULL;
-t_TOF *f1 = NULL;
-
+t_LNOF*f1 = NULL;
+t_TOF *f2 = NULL;
 
 t_block buf,buf1;  // the buffer in main memory
 
@@ -28,86 +28,165 @@ t_block buf,buf1;  // the buffer in main memory
 int main(){
 
 
-TOF_open(&f,"fouad_file",'N');
+/*TOF_open(&f,"fouad_file",'N');
 TOF_open(&f1,"LnOF",'N');
+TOF_open(&f2,"reo",'N');
 if (f == NULL) {
     printf("Error: file not opened!\n");
 }
+*/
 
-
+TOF_open(&f,"fouad_file",'N');
 
 
 Bulk_Loading(f);
 
-N_insert(f,f1);
-affichage(f,f1);
+TOF_close(f);
+
+ int number = count_lines("dataset.txt");
+FILE *fs = fopen("save.txt", "w");
+
+     fprintf(fs,"%d",number/2);
+     fclose(fs);
+     LNOF_open(&f1,"LnOF",'N');
+     LNOF_close(f1);
 int i, j, found, in_overflow;
-//TOF_readBlock(f,1,&buf);
-//printf("%d\n",getHeader(f));
 
-
-//seqsearch(f, f1, buf1.tab[1].student1_id, buf1.tab[1].student2_id, buf1.tab[1].time, &found, &i, &j, &in_overflow);
-
-
-
-//printf("%d",buf.tab[74].student1_id);
-//printf("%d",buf.nb);
-//int found,i,j;
-
-//seqsearch3(buf.tab[5],&found,&i,&j);
-//if(found=1){
-//printf("%d,%d",i,j);
-//TOF_readBlock(f,4,&buf);
-//t_rec x=buf.tab[4];
-//printf("%d",x.time);
-//printf("%d",buf.tab[4].time);
-//printf("%d",buf.nb);
-/*FILE *fi;
-t_rec e;
-int number=count_lines("DAKICHE.txt");
-fi=fopen("DAKICHE.txt","r");
-
-*/
-
-/*int i,j;
-i=0;
-j=0;
-t_TOF*f2;
-int trouve;
-TOF_readBlock(f,12,&buf);
-recherchee(f,f1,29,4,&trouve,&i,&j,&f2);
-printf("%d,%d\n",i,j);
-printf("%d",trouve);
-*/
-/*TOF_readBlock(f,20,&buf);
-int i,j,trouve;
-
-t_rec e;
-e.student1_id=6;
-e.student2_id=28;
-e.time=916959600;
-e.rating=0;
-TOF_readBlock(f,3,&buf);
-seqsearch3(f,e,&trouve,&i,&j);
-printf("%d,%d,%d\n",trouve,i,j);
-printf("%d,%d,%d,%d\n",buf.tab[57].student1_id,buf.tab[57].student2_id,buf.tab[57].time);
-printf("%d,%d,%d,%d\n",buf.tab[58].student1_id,buf.tab[58].student2_id,buf.tab[58].time);
-*/
-//void seqsearch3fouad(t_TOF *f, int id1, int id2, t_TOF *f1,int *found,int *i_block, int *j_rec,int *is_lnof)
 int is_lnof;
 
-//seqsearch3fouad(f, 28, 10, f1, &found, &i, &j, &is_lnof);
-
-print_friends(f,f1,2);
 
 
 
 
-TOF_close(f);
-TOF_close(f1);
+    t_TOF *mainFile = NULL;   // pointer to main TOF file
+    t_TOF *overflowFile = NULL; // pointer to overflow TOF file
+    int choice;
+
+printf("*---------------50/100 of the dataset is loaded automatically into the Main Sequential Sorted File (TOF) with 75/100 loading factor ---------------*,");
+
+    do {
+        printf("\n================= TOF PROJECT MENU =================\n");
+        printf("1. Insert N friendships\n");   //done
+        printf("2. Search for the rating between two students\n"); //done
+        printf("3. Update an existing rating.\n"); //done
+        printf("4. List all friends of a given student.\n"); //done
+        printf("5. Produce a clean, fully sorted file and merge.\n");//done
+        printf("6. Reset the overflow area\n");
+        printf("7. Display the content of any block and its address.\n");//done
+        printf("8. Display the entire file, including its header information.\n"); //done
+        printf("0. Exit\n");
+        printf("====================================================\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1:
+                TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+
+
+
+                N_insert(f,f1);
+                TOF_close(f);
+                LNOF_close(f1);
+                break;
+
+            case 2: {
+                t_rec e;
+                int id1,id2;
+                printf("Enter student1_id ");
+                scanf("%d", &id1);
+                printf("Enter student2_id ");
+                scanf("%d", &id2);
+                TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+                print_all_records_id1_id2(f, f1, id1, id2);
+                TOF_close(f);
+                LNOF_close(f1);
+                break;
+            }
+
+            case 3:
+                TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+                update_rating(f,f1);
+                TOF_close(f);
+                LNOF_close(f1);
+                break;
+
+            case 4: {
+                // Sequential search for a record by keys
+                int id1, id2, time, found, i, j, in_overflow;
+                printf("Enter student1_id:");
+                scanf("%d", &id1);
+                TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+                print_friends(f, f1, id1);
+                TOF_close(f);
+                LNOF_close(f1);
+                break;
+            }
+
+
+
+            case 5: {
+                int id1;
+                TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+                TOF_open(&f2,"reo",'N');
+                reorganization(f2,f,f1);
+
+                TOF_close(f);
+                LNOF_close(f1);
+                TOF_close(f2);
+                break;
+            }
+
+            case 6:
+                // Update rating of a record
+                // update_rating(mainFile, overflowFile);
+                break;
+
+            case 7:{
+             int nb;
+            printf("Enter number of block u wana see: ");
+            scanf("%d", &nb);
+            TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+                TOF_open(&f2,"reo",'N');
+            display_block(f,nb);
+            TOF_close(f);
+                LNOF_close(f1);
+                TOF_close(f2);
+
+                break;
+            }
+            case 8: {
+                TOF_open(&f,"fouad_file",'E');
+                LNOF_open(&f1,"LnOF",'E');
+                TOF_open(&f2,"reo",'N');
+                display_file(f);
+                TOF_close(f);
+                LNOF_close(f1);
+                TOF_close(f2);
+
+
+                break;
+            }
+
+            case 0:
+                printf("Exiting...\n");
+                break;
+
+            default:
+                printf("Invalid choice. Try again.\n");
+        }
+
+    } while(choice != 0);
+
+
 
 
 
 
 }
-
